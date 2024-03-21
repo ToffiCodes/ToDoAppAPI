@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo App</title>
+  <!-- <link rel="stylesheet" href="style.css">-->
+</head>
+
+<body>
+
+  <section class="todo">
+    <h2>Todo</h2>
+    <div class="input">
+      <input type="text" class="input-field" id="todoInput" placeholder="e.g. get shit done!" />
+      <button class="btn">Add</button>
+    </div>
+    <div id="AA">
+      <label>
+        <input type="radio" name="filter" value="all" id="all" checked> All
+      </label>
+      <label>
+        <input type="radio" name="filter" value="open" id="open"> Open
+      </label>
+      <label>
+        <input type="radio" name="filter" value="done" id="done"> Done
+      </label>
+    </div>
+    <ul class="scroll">
+      <li id="todoList"></li>
+    </ul>
+    <div>
+      <hr class="counter" />
+      <div class="counter-container">
+        <p><span id="todoCount"> 0</span>items total</p>
+        <button id="deleteButton">Delete Done Todos </button>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
