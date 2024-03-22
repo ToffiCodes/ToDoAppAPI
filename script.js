@@ -1,161 +1,156 @@
-/*  Nicos State Ansatz
-const state = {
-  todos [
-    {description:"Learn HTML", done: true},
-    {description:"Learn CSS", done: true},
-    {description:"Learn Javascript", done: false}
-  ],
-};
+// Definiere die API-Endpunkt-URL
+const apiUrl = "http://localhost:4730/todos/";
 
-function renderTodos(){
-  const list = document.querySelector("list");
-  list.innerHTML = "";
+// Lade Todos von der API
+function loadTodosFromApi() {
+  fetch(apiUrl)
+    .then((response) => response.json())
+    .then((data) => {
+      todos = data;
+      renderTodos(todos);
+    })
+    .catch((error) => console.error("Fehler beim Laden der Todos:", error));
+}
 
-  state.todos.forEach(todo =>{
+// Speichere neue Todos in der API
+function saveTodoToApi(newTodo) {
+  fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(newTodo),
+  })
+    // Anfrage gut? Ja, ansonsten fehler
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Fehler beim Hinzufügen des Todos auf dem Server");
+      }
+      return response.json();
+    })
+    // dann füge es der Liste hinzu
+    .then((data) => {
+      todos.push(data);
+      renderTodos(todos);
+    })
+    .catch((error) => console.error("Fehler beim Speichern des Todos:", error));
+}
 
-    const todoLi = document.createElement("li");
+// Aktualisiere das Todo in der API
+function updateTodoOnApi(todo) {
+  fetch(apiUrl + todo.id, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(todo),
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Fehler beim Aktualisieren des Todos auf dem Server.");
+      }
+      console.log("Todo erfolgreich aktualisiert.");
+    })
+    .catch((error) =>
+      console.error("Fehler beim Aktualisieren des Todos:", error)
+    );
+}
 
-    todoLi.todoObj = todo;
+// Lösche erledigte Todos von der API nach Filter
+function deleteDoneTodosFromApi() {
+  const doneTodos = todos.filter((todo) => todo.done);
+  doneTodos.forEach((doneTodo) => {
+    fetch(apiUrl + doneTodo.id, {
+      method: "DELETE",
+    })
+      // löschen erflgreich? Ja, ansonsten fehler
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Fehler beim Löschen des Todos vom Server");
+        }
+        console.log("Todo erfolgreich vom Server gelöscht.");
+      })
+      .catch((error) => console.error("Fehler beim Löschen des Todos:", error));
+  });
+  // Alle Todos filtern nach löschung
+  todos = todos.filter((todo) => !todo.done);
+  renderTodos(todos);
+}
 
+// Füge ein neues Todos hinzu
+document.querySelector(".btn").addEventListener("click", function () {
+  const todoInput = document.querySelector("#todoInput");
+  const todoText = todoInput.value.trim();
+
+  // überprüfung ob Eingabefeld leer ist
+  if (todoText !== "") {
+    const newTodo = {
+      description: todoText,
+      done: false,
+    };
+
+    // Eingabefeld wird wieder leer
+    saveTodoToApi(newTodo);
+    todoInput.value = "";
+  }
+});
+
+//Filter für All, open, done
+
+document.querySelectorAll('input[name="filter"]').forEach((radio) => {
+  radio.addEventListener("change", function () {
+    const filteredValue = document.querySelector(
+      'input[name="filter"]:checked'
+    ).value;
+    applyFilter(filteredValue);
+  });
+});
+
+function applyFilter(filteredValue) {
+  let filteredTodos = [];
+  if (filteredValue === "all") {
+    filteredTodos = todos;
+  } else if (filteredValue === "pending") {
+    filteredTodos = todos.filter((todo) => !todo.done);
+  } else if (filteredValue === "done") {
+    filteredTodos = todos.filter((todo) => todo.done);
+  }
+  renderTodos(filteredTodos);
+}
+
+// Lösche erledigte Todos
+document
+  .querySelector("#deleteButton")
+  .addEventListener("click", deleteDoneTodosFromApi);
+
+// Initialize
+document.addEventListener("DOMContentLoaded", loadTodosFromApi); // Seite wird erst vollständig geladen
+
+// Todos rendern
+function renderTodos(list) {
+  const todosList = document.querySelector("#todoList");
+  todosList.innerHTML = "";
+
+  list.forEach((todo) => {
+    const listItem = document.createElement("li");
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.checked = todo.done;
-
-    todoLi.appendChild(checkbox);
-
-    const todoText = document.createTextNode(todo.description);
-
-    newLi.append(todoText);
-
-    list.appendChild(newLi);
-  })
-}
-
-renderTodos();
-
-
-const list = document.querySelector("#list");
-list.addEventListener("change", (e) =>{
-  const checkbox = e.target;
-  const liElement = checkbox.parentElement;
-  const todo = liElement.todoObj;
-
-  todo.done = checkbox.checked;
-})  */
-
-// Leere Variable todos anlegen
-let todos;
-
-// Frage: Gibt der Local Storage beim Key "todos" null zurück?
-// If: Wenn Local Storage nicht null ist:
-if (localStorage.getItem("todos") !== null) {
-  todos = JSON.parse(localStorage.getItem("todos"));
-}
-// Ansonsten (also wenn Local Storage null ist):
-else {
-  todos = [
-    { description: "Learn JS", done: false, id: 1 },
-    { description: "Learn HTML", done: true, id: 2 },
-    { description: "Learn CSS", done: true, id: 3 },
-  ];
-}
-
-renderTodos(todos); // welche liste gerendert wird
-
-// Funktion, um alle Todos aus dem Array todos als DOM-Elemente auszugeben
-function renderTodos(list) {
-  // <ul id='todoList'>
-  const todosList = document.querySelector("#todoList");
-
-  // Leeren vorherigen Inhalt der Liste
-  todosList.innerHTML = "";
-
-  // Per forEach-Methode auf dem Array todos über jedes einzelne todo loopen und dafür eine Function ausführen:
-  list.forEach(function (element) {
-    // <li> erstellen und in Variable listEl speichern
-    const listEl = document.createElement("li");
-    const todoCheckbox = document.createElement("input");
-    todoCheckbox.type = "checkbox";
-    todoCheckbox.checked = element.done;
-    todoCheckbox.addEventListener("change", function () {
-      element.done = todoCheckbox.checked;
-      saveTodos();
+    // Change event für Checkbox
+    checkbox.addEventListener("change", function () {
+      todo.done = checkbox.checked;
+      updateTodoOnApi(todo);
     });
-
-    const todoText = document.createTextNode(element.description);
-    listEl.appendChild(todoCheckbox);
-    listEl.appendChild(todoText);
-
-    // Füge eine Klasse basierend auf dem Status hinzu
-    if (element.done) {
-      listEl.classList.add("done");
+    const todoText = document.createTextNode(todo.description);
+    listItem.appendChild(checkbox);
+    listItem.appendChild(todoText);
+    // überprüfen, ob Todo erledigt
+    if (todo.done) {
+      listItem.classList.add("done");
     }
-
-    listEl.appendChild(todoText);
-    todosList.appendChild(listEl);
+    // fügt todo zur Liste hinzu
+    todosList.appendChild(listItem);
   });
 
-  // Update Anzahl der Todos
-  document.querySelector("#todoCount").textContent = todos.length;
+  document.querySelector("#todoCount").textContent = list.length;
 }
-
-// Funktion zum filtern todos basierend auf dem ausgewähltem Filter
-
-document.querySelector("#AA").addEventListener("change", function (e) {
-  let currentFilter = e.target.value; // open all oder done
-  if (currentFilter === "all") {
-    renderTodos(todos);
-  } else if (currentFilter === "open") {
-    const filteredTodos = todos.filter(function (todo) {
-      return todo.done === false;
-    });
-    renderTodos(filteredTodos);
-  } else if (currentFilter === "done") {
-    const filteredTodos = todos.filter(function (todo) {
-      return todo.done === true;
-    });
-    renderTodos(filteredTodos);
-  }
-});
-
-// Funktion zum Speichern der Todos im Local Storage
-function saveTodos() {
-  localStorage.setItem("todos", JSON.stringify(todos));
-}
-
-document.querySelector(".btn").addEventListener("click", function () {
-  const todoInput = document.querySelector("#todoInput");
-  const todoText = todoInput.value.trim(); // .trim = Alle End Leerzeichen entfernen
-
-  if (todoText !== "") {
-    // für diplikate prüfen
-    const isDuplicate = todos.some(
-      (todo) => todo.description.toLowerCase() === todoText.toLowerCase()
-    );
-    if (isDuplicate) {
-      alert("Dieses Todo existiert bereits!"); //wenn duplikat dann alert
-    } else {
-      const newTodo = {
-        description: todoText,
-        done: false,
-        id: Date.now(), // Eindeutige ID erzeugen
-      };
-
-      todos.push(newTodo);
-      renderTodos(todos);
-      saveTodos();
-
-      todoInput.value = ""; // Eingabefeld leeren
-    }
-  }
-});
-
-// lösche Alles Button Eventlistener
-function deleteButton() {
-  todos = todos.filter((todo) => !todo.done);
-  renderTodos(todos);
-  saveTodos();
-}
-
-// Event listener für den "Delete Done Todos" Button
-document.querySelector("#deleteButton").addEventListener("click", deleteButton);
